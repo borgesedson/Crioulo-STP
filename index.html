@@ -1674,19 +1674,40 @@
         <div style="position: absolute; top: 20px; right: 20px; cursor: pointer;" onclick="toggleMobileMenu()">
             <i data-lucide="x" style="width: 28px; height: 28px; color: white;"></i>
         </div>
+
         <!-- Mobile User Profile (hidden by default, shown when logged in) -->
-        <div id="mobile-user-profile" onclick="window.location.href='/perfil.html'" style="display: none; text-align: center; margin-bottom: 20px; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer;">
-            <div id="mobile-avatar" style="width: 50px; height: 50px; background: var(--color-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.2rem; font-weight: 700; color: white;">U</div>
-            <div id="mobile-user-name" style="color: white; font-weight: 700; font-size: 1rem;">Utilizador</div>
-            <div id="mobile-user-xp" style="color: #4ade80; font-size: 0.8rem;">0 XP</div>
+        <div id="mobile-user-profile" style="display: none; width: 100%; max-width: 280px; margin-bottom: 24px;">
+            <!-- Avatar + Name -->
+            <div style="text-align: center; margin-bottom: 16px;">
+                <div id="mobile-avatar" style="width: 56px; height: 56px; background: var(--color-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.3rem; font-weight: 700; color: white;">U</div>
+                <div id="mobile-user-name" style="color: white; font-weight: 700; font-size: 1.1rem;">Utilizador</div>
+                <div id="mobile-user-xp" style="color: #4ade80; font-size: 0.8rem; margin-top: 4px;">0 XP</div>
+            </div>
+            <!-- Profile Links -->
+            <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+                <a href="/perfil.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: white; text-decoration: none; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s;">
+                    <i data-lucide="user" style="width: 18px; height: 18px;"></i> Ver Perfil
+                </a>
+                <a href="/perfil.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: white; text-decoration: none; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s;">
+                    <i data-lucide="history" style="width: 18px; height: 18px;"></i> Meu Histórico
+                </a>
+                <a href="/admin.html" id="mobile-admin-link" style="display: none; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(21,128,61,0.15); border-radius: 8px; color: #4ade80; text-decoration: none; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s;">
+                    <i data-lucide="shield-check" style="width: 18px; height: 18px;"></i> Painel Admin
+                </a>
+                <a href="javascript:void(0)" onclick="logout()" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,107,107,0.1); border-radius: 8px; color: #ff6b6b; text-decoration: none; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px; transition: background 0.2s;">
+                    <i data-lucide="log-out" style="width: 18px; height: 18px;"></i> Sair da Conta
+                </a>
+            </div>
         </div>
+
+        <!-- Navigation Links -->
         <a href="#home">Início</a>
         <a href="#dictionary">Dicionário</a>
         <a href="#learn">Aprender</a>
         <a href="#contribute" class="btn-contribute" style="margin-top: 20px;">Contribuir Agora</a>
         <a href="javascript:void(0)" id="mobile-login-btn" style="font-size: 1rem; opacity: 0.7;">Entrar / Registar</a>
-        <a href="javascript:void(0)" id="mobile-logout-btn" style="display: none; font-size: 0.85rem; opacity: 0.5; color: #ff6b6b;" onclick="logout()">Sair da Conta</a>
     </div>
+
 
     <main>
         <!-- HERO SECTION -->
@@ -2350,7 +2371,6 @@
             // Mobile menu elements
             const mobileProfile = document.getElementById('mobile-user-profile');
             const mobileLoginBtn = document.getElementById('mobile-login-btn');
-            const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
 
             if (user) {
                 if (loginNavBtn) loginNavBtn.style.display = 'none';
@@ -2370,10 +2390,16 @@
                     };
                 }
 
-                // Show/Hide Admin Link
+                // Show/Hide Admin Link (desktop)
                 const adminLink = document.getElementById('admin-nav-link');
                 if (adminLink) {
                     adminLink.style.display = user.role === 'ADMIN' ? 'flex' : 'none';
+                }
+
+                // Show/Hide Admin Link (mobile)
+                const mobileAdminLink = document.getElementById('mobile-admin-link');
+                if (mobileAdminLink) {
+                    mobileAdminLink.style.display = user.role === 'ADMIN' ? 'flex' : 'none';
                 }
                 
                 // Global click to close
@@ -2392,7 +2418,6 @@
                     if (mXp) mXp.innerText = `${user.xp || 0} XP`;
                 }
                 if (mobileLoginBtn) mobileLoginBtn.style.display = 'none';
-                if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
             } else {
                 if (loginNavBtn) loginNavBtn.style.display = 'inline-block';
                 if (userProfileNav) userProfileNav.style.display = 'none';
@@ -2402,7 +2427,10 @@
                 // Mobile menu: hide profile, show login
                 if (mobileProfile) mobileProfile.style.display = 'none';
                 if (mobileLoginBtn) mobileLoginBtn.style.display = 'block';
-                if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
+
+                // Hide mobile admin link
+                const mobileAdminLink = document.getElementById('mobile-admin-link');
+                if (mobileAdminLink) mobileAdminLink.style.display = 'none';
             }
         }
 
