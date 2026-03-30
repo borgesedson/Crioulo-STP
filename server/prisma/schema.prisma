@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Dictionary {
+  id            String   @id @default(uuid())
+  word          String
+  phonetic      String?
+  category      String?
+  variant       String
+  translationPt String
+  exampleKriolu String?
+  examplePt     String?
+  audioUrl      String?
+  culturalNotes String?
+  source        String?
+  status        String   @default("published")
+  votes         Vote[]
+  createdAt     DateTime @default(now())
+
+  @@map("dictionary")
+}
+
+model Contribution {
+  id                 String   @id @default(uuid())
+  userId             String?
+  contributorName    String?
+  contributorEmail   String?
+  contributorCountry String?
+  variant            String
+  tipo               String
+  wordKriolu         String
+  category           String?
+  translationPt      String
+  exampleKriolu      String?
+  examplePt          String?
+  culturalNotes      String?
+  audioUrl           String?
+  phonetic           String?
+  status             String   @default("pending") // pending, approved, rejected
+
+  votes              Vote[]
+  user               User?    @relation(fields: [userId], references: [id])
+  createdAt          DateTime @default(now())
+
+  @@map("contributions")
+}
+
+model Lesson {
+  id          String   @id @default(uuid())
+  title       String
+  nivel       String
+  durationMin Int?
+  xpReward    Int      @default(10)
+  orderIndex  Int?
+  content     Json?
+  createdAt   DateTime @default(now())
+
+  @@map("lessons")
+}
+
+model User {
+  id               String         @id @default(uuid())
+  email            String         @unique
+  password         String
+  name             String?
+  role             String         @default("USER") // USER, ADMIN
+  recoveryKey      String?
+  xpTotal          Int            @default(0)
+  streakAtual      Int            @default(0)
+  lastActivityAt   DateTime?
+  nivel            String         @default("A1")
+  country          String?
+  contributions    Contribution[]
+  badges           UserBadge[]
+  votes            Vote[]
+  createdAt        DateTime       @default(now())
+
+  @@map("users")
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String?
+  icon        String?
+  requirement Json?
+  users       UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
+
+model Vote {
+  id             String        @id @default(uuid())
+  userId         String
+  dictionaryId   String?
+  contributionId String?
+  value          Int           @default(1) // 1 for Up, -1 for Down
+  user           User          @relation(fields: [userId], references: [id])
+  dictionary     Dictionary?   @relation(fields: [dictionaryId], references: [id])
+  contribution   Contribution? @relation(fields: [contributionId], references: [id])
+
+  @@unique([userId, dictionaryId])
+  @@unique([userId, contributionId])
+  @@map("votes")
+}

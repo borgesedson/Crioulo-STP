@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil | Crioulo STP 🇸🇹</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.363.0/dist/umd/lucide.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --color-green: #1B6B45;
+            --color-green-dark: #145235;
+            --color-yellow: #E8B84B;
+            --color-cream: #FAF7F0;
+            --color-ink: #1A1A14;
+            --color-ink-soft: #2D2D24;
+            --color-white: #FFFFFF;
+            --font-display: 'Cormorant Garamond', serif;
+            --font-body: 'DM Sans', sans-serif;
+            --transition-slow: 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-fast: 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--color-cream);
+            color: var(--color-ink);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; opacity: 0.05;
+            background-image: url("https://grainy-gradients.vercel.app/noise.svg");
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+
+        /* HEADER / NAVBAR */
+        nav {
+            padding: 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--color-ink);
+            font-family: var(--font-display);
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--color-ink-soft);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+        .btn-back:hover { color: var(--color-green); transform: translateX(-4px); }
+
+        /* PROFILE HERO CARD */
+        .profile-hero {
+            background: var(--color-green);
+            color: var(--color-white);
+            border-radius: 24px;
+            padding: 60px;
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            box-shadow: 0 20px 40px rgba(27, 107, 69, 0.15);
+            margin-bottom: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-hero::after {
+            content: ''; position: absolute; top: -50%; right: -20%;
+            width: 60%; height: 200%; background: rgba(255,255,255,0.03);
+            transform: rotate(15deg); pointer-events: none;
+        }
+
+        .avatar-huge {
+            width: 120px; height: 120px;
+            background: var(--color-yellow);
+            color: var(--color-ink);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; font-family: var(--font-display);
+            font-weight: 700; border-radius: 50%;
+            border: 4px solid rgba(255,255,255,0.2);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .user-meta h1 { font-size: 2.5rem; margin-bottom: 8px; }
+        .user-meta p { opacity: 0.7; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+        .stats-summary {
+            margin-left: auto;
+            display: flex;
+            gap: 30px;
+        }
+
+        .stat-box { font-family: var(--font-display); text-align: center; }
+        .stat-label { font-size: 0.8rem; text-transform: uppercase; opacity: 0.6; letter-spacing: 0.2em; display: block; }
+        .stat-num { font-size: 2rem; font-weight: 700; color: var(--color-yellow); }
+
+        /* SECTION GRID */
+        .grid-layout {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+
+        .section-card {
+            background: white; border-radius: 16px; padding: 30px;
+            border: 1px solid rgba(0,0,0,0.05); height: 100%;
+        }
+
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; border-bottom: 1px solid rgba(0,0,0,0.03);
+            padding-bottom: 15px;
+        }
+
+        .section-header h2 { font-size: 1.5rem; color: var(--color-ink); }
+
+        .empty-state {
+            text-align: center; padding: 40px 20px;
+        }
+
+        .empty-icon { font-size: 3rem; display: block; margin-bottom: 15px; opacity: 0.5; }
+        .empty-text { font-weight: 600; color: var(--color-ink-soft); display: block; margin-bottom: 5px; }
+        .empty-sub { font-size: 0.85rem; color: #666; display: block; margin-bottom: 20px; }
+
+        .btn-action {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: var(--color-green); color: white;
+            padding: 10px 20px; border-radius: 8px; text-decoration: none;
+            font-size: 0.85rem; font-weight: 700; transition: 0.2s; border: none; cursor: pointer;
+        }
+        .btn-action:hover { background: var(--color-green-dark); transform: translateY(-2px); }
+
+        /* LISTS */
+        .item-list { list-style: none; }
+        .list-item {
+            padding: 15px 0; border-bottom: 1px solid rgba(0,0,0,0.03);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .item-info { display: flex; flex-direction: column; gap: 2px; }
+        .item-title { font-weight: 700; font-size: 1rem; color: var(--color-green); }
+        .item-sub { font-size: 0.8rem; color: #777; }
+
+        .badge-status {
+            font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+            padding: 4px 8px; border-radius: 4px; letter-spacing: 0.05em;
+        }
+        .status-pending { background: #fff7ed; color: #c2410c; }
+        .status-approved { background: #f0fdf4; color: #166534; }
+        .status-rejected { background: #fef2f2; color: #991b1b; }
+
+        /* BADGES */
+        .badges-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 20px;
+        }
+        .badge-item {
+            display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+        }
+        .badge-circle {
+            width: 60px; height: 60px; background: #eee; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            filter: grayscale(1); opacity: 0.4; transition: 0.3s;
+        }
+        .badge-item.earned .badge-circle {
+            background: var(--color-cream); border: 2px solid var(--color-yellow);
+            filter: grayscale(0); opacity: 1; box-shadow: 0 5px 15px rgba(232, 184, 75, 0.2);
+        }
+        .badge-name { font-size: 0.7rem; font-weight: 700; color: var(--color-ink-soft); }
+
+        /* SETTINGS FORM */
+        .settings-form { display: flex; flex-direction: column; gap: 15px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 0.8rem; font-weight: 600; color: var(--color-ink-soft); }
+        .form-group input {
+            padding: 12px; border-radius: 8px; border: 1px solid #ddd;
+            font-family: var(--font-body); font-size: 0.9rem;
+        }
+        .form-group input:focus { outline: 2px solid var(--color-green); border-color: transparent; }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .grid-layout { grid-template-columns: 1fr; }
+            .profile-hero { flex-direction: column; text-align: center; padding: 40px; }
+            .stats-summary { margin: 20px 0 0 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+
+    <div class="container">
+        <nav>
+            <a href="/" class="logo">🇸🇹 Crioulo STP</a>
+            <a href="/" class="btn-back">
+                <i data-lucide="arrow-left" style="width: 16px;"></i>
+                Voltar ao Início
+            </a>
+        </nav>
+
+        <section class="profile-hero" id="profile-hero-card">
+            <div class="avatar-huge" id="hero-avatar">...</div>
+            <div class="user-meta">
+                <h1 id="hero-name">Carregando...</h1>
+                <p id="hero-date">Membro desde ...</p>
+            </div>
+            <div class="stats-summary">
+                <div class="stat-box">
+                    <span class="stat-num" id="stat-xp">0</span>
+                    <span class="stat-label">XP TOTAL</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-num" id="stat-streak">0</span>
+                    <span class="stat-label">STREAK</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-num" id="stat-contribs">0</span>
+                    <span class="stat-label">ENVIOS</span>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid-layout">
+            <!-- LEFT COLUMN -->
+            <div class="col-left" style="display: flex; flex-direction: column; gap: 40px;">
+                
+                <!-- CONTRIBUTIONS -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Minhas Contribuições</h2>
+                    </div>
+                    <ul class="item-list" id="list-contributions">
+                        <!-- JS injected -->
+                    </ul>
+                </div>
+
+                <!-- FAVORITES -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Palavras Guardadas</h2>
+                    </div>
+                    <ul class="item-list" id="list-favorites">
+                        <!-- JS injected -->
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="col-right" style="display: flex; flex-direction: column; gap: 40px;">
+                
+                <!-- ACHIEVEMENTS -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Conquistas</h2>
+                    </div>
+                    <div class="badges-grid" id="badges-grid">
+                        <div class="badge-item earned">
+                            <div class="badge-circle">🌱</div>
+                            <span class="badge-name">Pioneiro</span>
+                        </div>
+                        <div class="badge-item" id="badge-first-contrib">
+                            <div class="badge-circle">✉️</div>
+                            <span class="badge-name">Colaborador</span>
+                        </div>
+                        <div class="badge-item" id="badge-master">
+                            <div class="badge-circle">🏅</div>
+                            <span class="badge-name">Mestre</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2>Definições da Conta</h2>
+                    </div>
+                    <form class="settings-form" id="settings-form">
+                        <div class="form-group">
+                            <label>Nome de Exibição</label>
+                            <input type="text" id="set-name" placeholder="Teu nome">
+                        </div>
+                        <div class="form-group">
+                            <label>Nova Password</label>
+                            <input type="password" id="set-pass" placeholder="Deixa em branco para manter">
+                        </div>
+                        <button type="submit" class="btn-action" style="justify-content: center; margin-top: 10px;">
+                            Salvar Alterações
+                        </button>
+                    </form>
+                </div>
+
+                <!-- DANGER ZONE -->
+                <button onclick="handleLogout()" style="background: none; border: 1px solid #ff000033; color: #cc0000; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: 700; width: 100%; transition: 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='none'">
+                    Terminar Sessão
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // 1. Verificar Autenticação
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/';
+
+        async function fetchProfile() {
+            try {
+                const res = await fetch('/api/user/perfil', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                if (data.error) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/';
+                    return;
+                }
+
+                renderProfile(data);
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function renderProfile(data) {
+            const user = data.user;
+            const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() : '?';
+            
+            // Hero Card
+            document.getElementById('hero-avatar').innerText = initials;
+            document.getElementById('hero-name').innerText = user.name;
+            document.getElementById('set-name').value = user.name || '';
+            
+            const dateStr = new Date(user.createdAt).toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+            document.getElementById('hero-date').innerText = `Membro desde ${dateStr}`;
+            
+            document.getElementById('stat-xp').innerText = user.xpTotal;
+            document.getElementById('stat-streak').innerText = user.streakAtual;
+            document.getElementById('stat-contribs').innerText = data.contributions.length;
+
+            // Contributions List
+            const cList = document.getElementById('list-contributions');
+            if (!data.contributions || data.contributions.length === 0) {
+                cList.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">✍️</span>
+                        <span class="empty-text">Ainda não fizeste nenhuma contribuição</span>
+                        <p class="empty-sub">Ajuda a expandir o arquivo nacional com novos termos e expressões da tua ilha.</p>
+                        <a href="index.html#contribute" class="btn-action">
+                            <i data-lucide="plus-circle" style="width: 16px;"></i>
+                            Contribuir Agora
+                        </a>
+                    </div>
+                `;
+                lucide.createIcons();
+            } else {
+                cList.innerHTML = data.contributions.map(c => `
+                    <li class="list-item">
+                        <div class="item-info">
+                            <span class="item-title">${c.wordKriolu}</span>
+                            <span class="item-sub">${c.tipo} • ${new Date(c.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <span class="badge-status status-${c.status}">${translateStatus(c.status)}</span>
+                    </li>
+                `).join('');
+                document.getElementById('badge-first-contrib').classList.add('earned');
+            }
+
+            // Favorites List
+            const fList = document.getElementById('list-favorites');
+            if (!data.favorites || data.favorites.length === 0) {
+                fList.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">📖</span>
+                        <span class="empty-text">Ainda não guardaste nenhuma palavra</span>
+                        <span class="empty-sub">Explora o dicionário e guarda as palavras que quiseres aprender.</span>
+                        <a href="/#dictionary" class="btn-action">Explorar Dicionário</a>
+                    </div>
+                `;
+            } else {
+                fList.innerHTML = data.favorites.map(f => `
+                    <li class="list-item">
+                        <div class="item-info">
+                            <span class="item-title">${f.word}</span>
+                            <span class="item-sub">${f.translationPt}</span>
+                        </div>
+                        <i data-lucide="bookmark" style="width: 16px; color: var(--color-yellow); fill: var(--color-yellow);"></i>
+                    </li>
+                `).join('');
+                lucide.createIcons();
+            }
+
+            // XP Badge check
+            if (user.xpTotal >= 100) document.getElementById('badge-master').classList.add('earned');
+        }
+
+        function translateStatus(s) {
+            const map = { 'pending': 'Pendente', 'approved': 'Aprovado', 'rejected': 'Rejeitado' };
+            return map[s] || s;
+        }
+
+        // Settings Form
+        document.getElementById('settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('set-name').value;
+            const password = document.getElementById('set-pass').value;
+
+            try {
+                const res = await fetch('/api/user/settings', {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ name, password })
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('Definições atualizadas com sucesso!');
+                    if (password) {
+                        localStorage.removeItem('token');
+                        window.location.href = '/';
+                    } else {
+                        fetchProfile();
+                    }
+                }
+            } catch (err) { alert('Erro ao atualizar.'); }
+        });
+
+        function handleLogout() {
+            localStorage.removeItem('token');
+            window.location.href = '/';
+        }
+
+        fetchProfile();
+    </script>
+</body>
+</html>

@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin | Arquivo Nacional STP 🇸🇹</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #faf9f6; }
+        .sidebar { background-color: #1c3a2a; }
+        .card-contribution { background: white; border: 1px solid #e7e5e4; transition: all 0.2s; }
+        .card-contribution:hover { border-color: #1c3a2a; box-shadow: 0 4px 12px rgba(28, 58, 42, 0.05); }
+        .input-edit { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; width: 100%; font-size: 0.875rem; transition: all 0.2s; }
+        .input-edit:focus { outline: none; border-color: #1c3a2a; background: white; box-shadow: 0 0 40px rgba(28, 58, 42, 0.05); }
+        .btn-approve { background-color: #15803d; color: white; transition: all 0.2s; }
+        .btn-approve:hover { background-color: #166534; transform: translateY(-1px); }
+        .btn-reject { color: #dc2626; border: 1px solid #fecaca; background-color: #fef2f2; transition: all 0.2s; }
+        .btn-reject:hover { background-color: #fee2e2; }
+        .nav-link { color: #86efac; transition: all 0.2s; }
+        .nav-link:hover { color: white; background-color: rgba(255,255,255,0.05); }
+        .nav-link.active { background-color: rgba(255,255,255,0.1); color: #4ade80; }
+    </style>
+</head>
+<body class="flex min-h-screen">
+
+    <!-- Sidebar -->
+    <aside class="sidebar w-64 text-white flex flex-col fixed h-full transition-all duration-300">
+        <div class="p-6 border-b border-green-900/50">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center font-bold text-white">S</div>
+                <h1 class="font-bold text-lg tracking-tight">Kriolu<span class="text-green-400">Admin</span></h1>
+            </div>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-2 mt-4">
+            <button onclick="switchTab('moderation')" id="nav-moderation" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="font-medium">Moderação</span>
+            </button>
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </button>
+            <button onclick="switchTab('users')" id="nav-users" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="font-medium">Utilizadores</span>
+            </button>
+            <div class="pt-4 mt-4 border-t border-green-900/30">
+                <a href="/" class="flex items-center gap-3 px-4 py-3 text-green-100/60 hover:text-white hover:bg-white/5 rounded-xl transition-all">
+                    <i data-lucide="external-link" class="w-5 h-5"></i>
+                    <span class="font-medium">Ir para o Site</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-green-900/50">
+            <button onclick="logout()" class="flex items-center gap-3 px-4 py-3 w-full text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+                <span class="font-medium">Sair do Painel</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-64 p-8 lg:p-12 overflow-y-auto">
+        
+        <!-- MODERATION TAB -->
+        <div id="tab-moderation" class="tab-content">
+            <header class="flex justify-between items-end mb-12">
+                <div>
+                    <span class="text-green-700 font-bold text-xs uppercase tracking-widest bg-green-100 px-3 py-1 rounded-full">Gestão de Conteúdo</span>
+                    <h2 class="text-3xl font-extrabold text-[#1c3a2a] mt-3">Moderação Pendente</h2>
+                    <p class="text-slate-500 mt-2 font-medium">Valida as novas contribuições enviadas pela comunidade.</p>
+                </div>
+            </header>
+
+            <div id="pending-list" class="grid grid-cols-1 gap-6"></div>
+            <div id="empty-moderation" class="hidden py-24 text-center">Tudo validado!</div>
+        </div>
+
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content hidden">
+            <header class="mb-12">
+                <span class="text-blue-700 font-bold text-xs uppercase tracking-widest bg-blue-100 px-3 py-1 rounded-full">Inteligência de Dados</span>
+                <h2 class="text-3xl font-extrabold text-[#1c3a2a] mt-3">Dashboard de Contribuições</h2>
+            </header>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 bg-white p-8 rounded-[2rem] border border-stone-200">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="trophy" class="text-amber-500 w-6 h-6"></i>
+                        Ranking de Contribuidores (Aprovados)
+                    </h3>
+                    <div id="top-contributors" class="space-y-4"></div>
+                </div>
+                <div class="bg-white p-8 rounded-[2rem] border border-stone-200 shadow-sm">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="text-green-500 w-6 h-6"></i>
+                        Distribuição
+                    </h3>
+                    <div id="variant-stats" class="space-y-6"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- USERS TAB -->
+        <div id="tab-users" class="tab-content hidden">
+            <header class="mb-12">
+                <span class="text-purple-700 font-bold text-xs uppercase tracking-widest bg-purple-100 px-3 py-1 rounded-full">Administração</span>
+                <h2 class="text-3xl font-extrabold text-[#1c3a2a] mt-3">Gestão de Utilizadores</h2>
+            </header>
+            <div class="bg-white rounded-[2rem] border border-stone-200 overflow-hidden shadow-sm">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-stone-50 border-b border-stone-200">
+                        <tr>
+                            <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Utilizador</th>
+                            <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cargo</th>
+                            <th class="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const API_URL = '/api';
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!token || user.role !== 'ADMIN') window.location.href = '/';
+
+        let currentTab = 'moderation';
+
+        async function init() {
+            lucide.createIcons();
+            switchTab('moderation');
+        }
+
+        async function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`nav-${tab}`).classList.add('active');
+
+            if (tab === 'moderation') loadPending();
+            if (tab === 'dashboard') loadDashboard();
+            if (tab === 'users') loadUsers();
+            
+            lucide.createIcons();
+        }
+
+        async function loadPending() {
+            const list = document.getElementById('pending-list');
+            list.innerHTML = '<div class="flex justify-center py-20"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-700"></div></div>';
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/contribuicoes`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const { pending } = await res.json();
+                list.innerHTML = pending.length ? '' : '<div class="py-20 text-center"><i data-lucide="check-circle-2" class="w-12 h-12 text-green-200 mx-auto mb-4"></i><p class="font-medium text-slate-400">Tudo em dia! Nenhuma contribuição pendente.</p></div>';
+                
+                pending.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'card-contribution p-8 rounded-[2rem] flex flex-col xl:flex-row gap-8';
+                    card.innerHTML = `
+                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1">Palavra (Kriolu)</label>
+                                <input type="text" id="word-${item.id}" value="${item.wordKriolu}" class="input-edit font-bold">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1">Tradução (Português)</label>
+                                <input type="text" id="translation-${item.id}" value="${item.translationPt}" class="input-edit">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1">Pronúncia / Fonética</label>
+                                <input type="text" id="phonetic-${item.id}" value="${item.phonetic || ''}" placeholder="Opcional" class="input-edit">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1">Variante</label>
+                                <select id="variant-${item.id}" class="input-edit">
+                                    <option value="Forro" ${item.variant === 'Forro' ? 'selected' : ''}>Forro</option>
+                                    <option value="Angolar" ${item.variant === 'Angolar' ? 'selected' : ''}>Angolar</option>
+                                    <option value="Lung'Ie" ${item.variant === 'Lung\'Ie' ? 'selected' : ''}>Lung'Ie</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1">Categoria</label>
+                                <select id="category-${item.id}" class="input-edit">
+                                    <option value="Verbo" ${item.category === 'Verbo' ? 'selected' : ''}>Verbo</option>
+                                    <option value="Adjetivo" ${item.category === 'Adjetivo' ? 'selected' : ''}>Adjetivo</option>
+                                    <option value="Substantivo" ${item.category === 'Substantivo' ? 'selected' : ''}>Substantivo</option>
+                                    <option value="Advérbio" ${item.category === 'Advérbio' ? 'selected' : ''}>Advérbio</option>
+                                    <option value="Expressão" ${item.category === 'Expressão' ? 'selected' : ''}>Expressão</option>
+                                    <option value="Ditado São-Tomense" ${item.category === 'Ditado São-Tomense' ? 'selected' : ''}>Ditado São-Tomense</option>
+                                    <option value="Interjeição" ${item.category === 'Interjeição' ? 'selected' : ''}>Interjeição</option>
+                                    <option value="Outros" ${item.category === 'Outros' ? 'selected' : ''}>Outros</option>
+                                </select>
+                            </div>
+                            <div class="col-span-full space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1">Exemplo de Uso (Kriolu)</label>
+                                <textarea id="example-kriolu-${item.id}" rows="2" class="input-edit">${item.exampleKriolu || ''}</textarea>
+                            </div>
+                            <div class="col-span-full space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1">Tradução do Exemplo</label>
+                                <textarea id="example-pt-${item.id}" rows="2" class="input-edit">${item.examplePt || ''}</textarea>
+                            </div>
+                            <div class="col-span-full space-y-1">
+                                <label class="text-[9px] uppercase font-bold text-slate-400 ml-1 text-green-700">Notas Culturais & Contexto (Obrigatório)</label>
+                                <textarea id="cultural-notes-${item.id}" rows="3" class="input-edit border-green-100 focus:border-green-500">${item.culturalNotes || ''}</textarea>
+                            </div>
+                        </div>
+                        <div class="xl:w-72 flex flex-col justify-between">
+                            <div class="p-5 rounded-2xl bg-stone-50 border border-stone-100 mb-4 h-full">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i data-lucide="user-tag" class="w-4 h-4 text-green-700"></i>
+                                    <p class="text-[10px] font-bold uppercase text-slate-400">Contribuidor</p>
+                                </div>
+                                <p class="font-bold text-slate-800 text-lg">${item.contributorName || 'Anónimo'}</p>
+                                <p class="text-xs text-slate-500 mt-1">${new Date(item.createdAt).toLocaleDateString('pt-PT')}</p>
+                                ${item.audioUrl ? `
+                                <div class="mt-4 pt-4 border-t border-stone-100">
+                                    <p class="text-[9px] font-bold uppercase text-slate-400 mb-2">Áudio da Pronúncia</p>
+                                    <audio controls class="w-full h-8">
+                                        <source src="${item.audioUrl}" type="audio/webm">
+                                    </audio>
+                                </div>
+                                ` : ''}
+                            </div>
+                            <div class="flex flex-col gap-3">
+                                <button onclick="decide('${item.id}', 'approve')" class="btn-approve px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-3">
+                                    <i data-lucide="check" class="w-5 h-5"></i>
+                                    Aprovar
+                                </button>
+                                <button onclick="decide('${item.id}', 'reject')" class="btn-reject px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-3">
+                                    <i data-lucide="trash-2" class="w-5 h-5"></i>
+                                    Rejeitar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+                lucide.createIcons();
+            } catch (e) { list.innerHTML = 'Erro ao carregar dados.'; }
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch(`${API_URL}/admin/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const { topContributors, statsByVariant } = await res.json();
+                
+                const contList = document.getElementById('top-contributors');
+                contList.innerHTML = topContributors.length 
+                    ? topContributors.map((c, i) => `
+                        <div class="flex items-center justify-between p-6 bg-stone-50 rounded-2xl border border-stone-100 hover:border-blue-200 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 flex items-center justify-center bg-blue-100 text-blue-700 rounded-xl font-bold">
+                                    #${i+1}
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-lg">${c.name || 'Sem nome'}</p>
+                                    <p class="text-xs text-slate-400 font-medium">${c.email}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-2xl font-black text-blue-700 leading-none">${c.approvedCount}</p>
+                                <p class="text-[9px] uppercase font-bold text-slate-400 tracking-wider mt-1">Aprovadas</p>
+                            </div>
+                        </div>
+                    `).join('') 
+                    : '<p class="text-slate-400 text-center py-10">Ainda não há dados de contribuidores.</p>';
+
+                document.getElementById('variant-stats').innerHTML = statsByVariant.map(v => `
+                    <div class="space-y-2">
+                        <div class="flex justify-between items-end">
+                            <span class="font-bold text-slate-700">${v.variant}</span>
+                            <span class="text-sm font-black text-green-700">${v._count._all} <span class="text-[10px] text-slate-400 font-bold uppercase">termos</span></span>
+                        </div>
+                        <div class="w-full h-3 bg-stone-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-green-500 rounded-full transition-all duration-1000" style="width: ${Math.min(100, (v._count._all / 100) * 100)}%"></div>
+                        </div>
+                    </div>
+                `).join('');
+                
+                lucide.createIcons();
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadUsers() {
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center py-10">Carregando...</td></tr>';
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const { users } = await res.json();
+                tbody.innerHTML = users.map(u => `
+                    <tr class="border-b border-stone-100 hover:bg-stone-50/50 transition-all">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center text-slate-500 border border-stone-200">
+                                    <i data-lucide="user" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800">${u.name || 'Usuário Sem Nome'}</p>
+                                    <p class="text-xs text-slate-400 font-medium">${u.email}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="px-3 py-1 rounded-lg text-[10px] font-bold ${u.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}">
+                                ${u.role}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            ${u.email === user.email ? '' : `
+                                <button onclick="toggleRole('${u.id}', '${u.role}')" class="text-[11px] font-bold px-4 py-2 rounded-lg border border-stone-200 hover:bg-white hover:shadow-sm transition-all ${u.role === 'ADMIN' ? 'text-slate-400' : 'text-purple-600'}">
+                                    ${u.role === 'ADMIN' ? 'Despromover' : 'Promover a Admin'}
+                                </button>
+                            `}
+                        </td>
+                    </tr>
+                `).join('');
+                lucide.createIcons();
+            } catch (e) { tbody.innerHTML = 'Erro ao carregar utilizadores.'; }
+        }
+
+        async function toggleRole(id, currentRole) {
+            const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN';
+            if (!confirm(`Tem a certeza que deseja alterar o cargo deste utilizador para ${newRole}?`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/admin/users/${id}/role`, {
+                    method: 'PATCH',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ role: newRole })
+                });
+                if (res.ok) loadUsers();
+                else alert('Erro ao atualizar cargo');
+            } catch (e) { alert('Erro de conexão'); }
+        }
+
+        async function decide(id, decisao) {
+            const btn = event.currentTarget;
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mx-auto"></div>';
+            btn.disabled = true;
+
+            const editedData = decisao === 'approve' ? {
+                word: document.getElementById(`word-${id}`).value,
+                translationPt: document.getElementById(`translation-${id}`).value,
+                variant: document.getElementById(`variant-${id}`).value,
+                phonetic: document.getElementById(`phonetic-${id}`).value,
+                category: document.getElementById(`category-${id}`).value,
+                exampleKriolu: document.getElementById(`example-kriolu-${id}`).value,
+                examplePt: document.getElementById(`example-pt-${id}`).value,
+                culturalNotes: document.getElementById(`cultural-notes-${id}`).value
+            } : null;
+
+            try {
+                const res = await fetch(`${API_URL}/admin/decisao`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ id, decisao, editedData })
+                });
+                if (res.ok) loadPending();
+                else {
+                    alert('Erro ao processar decisão');
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                }
+            } catch (e) { 
+                alert('Erro de conexão');
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
