@@ -39,20 +39,27 @@
             --transition-fast: 0.3s ease;
         }
 
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             -webkit-font-smoothing: antialiased;
         }
 
+        html {
+            overflow-x: hidden !important;
+        }
+
         body {
             background-color: var(--color-cream);
             color: var(--color-ink);
             font-family: var(--font-body);
-            overflow-x: hidden !important; /* CRITICAL: Kills "aresta" */
+            overflow-x: hidden !important;
             position: relative;
             width: 100%;
+            max-width: 100vw;
             line-height: 1.6;
         }
 
@@ -147,10 +154,10 @@
         /* ── MOBILE RESPONSIVENESS OVERRIDES ─────────────────── */
         @media (max-width: 768px) {
             .container {
-                padding: 0 20px;
+                padding: 0 16px;
             }
             nav {
-                padding: 15px 20px;
+                padding: 12px 16px;
             }
             .nav-links {
                 display: none;
@@ -159,10 +166,10 @@
                 display: block;
             }
             .hero-title {
-                font-size: 2.8rem;
+                font-size: 2.5rem;
             }
             .hero-subtitle {
-                font-size: 1rem;
+                font-size: 0.95rem;
                 padding: 0 10px;
             }
             .hero-stats {
@@ -170,21 +177,46 @@
                 flex-direction: column;
             }
             .section-title {
-                font-size: 2.5rem !important;
+                font-size: 2rem !important;
+            }
+            /* Contribute form - kill overflow */
+            .archive-form-wrapper {
+                max-width: 100% !important;
             }
             .archive-form-wrapper form {
-                padding: 30px !important;
+                padding: 24px 16px !important;
             }
+            #form-lang-selector {
+                flex-wrap: wrap !important;
+            }
+            /* Translator - kill overflow */
+            .source-box {
+                padding: 20px !important;
+                border-radius: 12px !important;
+            }
+            .translator-header {
+                margin-bottom: 40px !important;
+            }
+            .translator-header h2 {
+                font-size: 2rem !important;
+            }
+            .translator-controls {
+                flex-wrap: wrap;
+                gap: 8px !important;
+                padding: 10px !important;
+            }
+            /* Modal - full screen on mobile */
             .modal-content {
                 width: 95%;
-                margin: 20px;
-                padding: 30px;
+                margin: 16px;
+                padding: 24px;
             }
             .auth-container-refined {
                 width: 100%;
                 height: 100%;
                 border-radius: 0;
                 max-height: 100vh;
+                max-height: 100dvh;
                 margin: 0;
                 display: flex;
                 flex-direction: column;
@@ -192,7 +224,24 @@
             .auth-form-body {
                 flex: 1;
                 overflow-y: auto;
-                padding: 30px 20px;
+                -webkit-overflow-scrolling: touch;
+                padding: 24px 20px;
+            }
+            /* Dictionary grid */
+            .word-grid {
+                grid-template-columns: 1fr !important;
+            }
+            /* Welcome modal */
+            .welcome-modal {
+                margin: 16px !important;
+                padding: 30px 20px !important;
+            }
+            /* Large titles kill */
+            h2[style*="font-size: 4rem"],
+            h2[style*="font-size: 3.5rem"],
+            h2[style*="font-size: 3rem"],
+            h3[style*="font-size: 2.5rem"] {
+                font-size: 1.8rem !important;
             }
         }
 
@@ -1269,17 +1318,22 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 17, 21, 0.85); /* Black/60 equivalent */
-            z-index: 9000; /* Layer 3: Modals (Top priority) */
-            display: none;
+            background: rgba(15, 17, 21, 0.85);
+            z-index: 9000;
+            display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            -webkit-overflow-scrolling: touch;
         }
 
         .modal-overlay.active {
-            display: flex;
+            visibility: visible;
+            opacity: 1;
         }
 
         /* ── NOVO AUTH MODAL DESIGN (Premium Vanilla CSS) ── */
@@ -1617,11 +1671,21 @@
 
     <!-- Overlay Mobile -->
     <div class="mobile-menu-overlay" id="mobile-menu-overlay">
+        <div style="position: absolute; top: 20px; right: 20px; cursor: pointer;" onclick="toggleMobileMenu()">
+            <i data-lucide="x" style="width: 28px; height: 28px; color: white;"></i>
+        </div>
+        <!-- Mobile User Profile (hidden by default, shown when logged in) -->
+        <div id="mobile-user-profile" style="display: none; text-align: center; margin-bottom: 20px; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <div id="mobile-avatar" style="width: 50px; height: 50px; background: var(--color-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 1.2rem; font-weight: 700; color: white;">U</div>
+            <div id="mobile-user-name" style="color: white; font-weight: 700; font-size: 1rem;">Utilizador</div>
+            <div id="mobile-user-xp" style="color: #4ade80; font-size: 0.8rem;">0 XP</div>
+        </div>
         <a href="#home">Início</a>
         <a href="#dictionary">Dicionário</a>
         <a href="#learn">Aprender</a>
         <a href="#contribute" class="btn-contribute" style="margin-top: 20px;">Contribuir Agora</a>
         <a href="javascript:void(0)" id="mobile-login-btn" style="font-size: 1rem; opacity: 0.7;">Entrar / Registar</a>
+        <a href="javascript:void(0)" id="mobile-logout-btn" style="display: none; font-size: 0.85rem; opacity: 0.5; color: #ff6b6b;" onclick="logout()">Sair da Conta</a>
     </div>
 
     <main>
@@ -2283,6 +2347,11 @@
             const user = JSON.parse(localStorage.getItem('user'));
             const dropdown = document.getElementById('nav-dropdown');
 
+            // Mobile menu elements
+            const mobileProfile = document.getElementById('mobile-user-profile');
+            const mobileLoginBtn = document.getElementById('mobile-login-btn');
+            const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+
             if (user) {
                 if (loginNavBtn) loginNavBtn.style.display = 'none';
                 if (userProfileNav) userProfileNav.style.display = 'flex';
@@ -2295,7 +2364,6 @@
                 if (dropXp) dropXp.innerText = `${user.xp || 0} XP`;
                 if (navAvatar) {
                     navAvatar.innerText = user.name ? user.name[0].toUpperCase() : 'U';
-                    // Toggle Dropdown
                     navAvatar.onclick = (e) => {
                         e.stopPropagation();
                         dropdown.classList.toggle('active');
@@ -2312,11 +2380,29 @@
                 document.addEventListener('click', () => {
                     if (dropdown) dropdown.classList.remove('active');
                 });
+
+                // Mobile menu: show profile, hide login
+                if (mobileProfile) {
+                    mobileProfile.style.display = 'block';
+                    const mAvatar = document.getElementById('mobile-avatar');
+                    const mName = document.getElementById('mobile-user-name');
+                    const mXp = document.getElementById('mobile-user-xp');
+                    if (mAvatar) mAvatar.innerText = user.name ? user.name[0].toUpperCase() : 'U';
+                    if (mName) mName.innerText = user.name;
+                    if (mXp) mXp.innerText = `${user.xp || 0} XP`;
+                }
+                if (mobileLoginBtn) mobileLoginBtn.style.display = 'none';
+                if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
             } else {
                 if (loginNavBtn) loginNavBtn.style.display = 'inline-block';
                 if (userProfileNav) userProfileNav.style.display = 'none';
                 const adminLink = document.getElementById('admin-nav-link');
                 if (adminLink) adminLink.style.display = 'none';
+
+                // Mobile menu: hide profile, show login
+                if (mobileProfile) mobileProfile.style.display = 'none';
+                if (mobileLoginBtn) mobileLoginBtn.style.display = 'block';
+                if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
             }
         }
 
