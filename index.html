@@ -405,9 +405,11 @@
         .nav-dropdown hr { border: 0; border-top: 1px solid #eee; margin: 0; }
 
         .nav-dropdown a {
-            padding: 12px 15px; text-decoration: none; color: var(--color-ink-soft);
-            font-size: 0.85rem; font-weight: 500; display: flex; align-items: center; gap: 10px;
+            padding: 12px 15px; text-decoration: none; 
+            color: var(--color-ink-soft) !important; /* Force visibility */
+            font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 10px;
             transition: 0.2s;
+            text-transform: uppercase; letter-spacing: 0.05em;
         }
         .nav-dropdown a:hover { background: #f1f5f9; color: var(--color-green); }
         .nav-dropdown i { width: 16px; height: 16px; }
@@ -418,14 +420,18 @@
             line-height: 1;
         }
 
-        .user-name {
-            font-size: 0.8rem;
+        #dropdown-user-name {
+            font-size: 0.9rem;
             font-weight: 700;
+            color: var(--color-ink) !important;
+            display: block;
         }
 
-        .user-xp {
-            font-size: 0.6rem;
-            opacity: 0.6;
+        #dropdown-user-xp {
+            font-size: 0.75rem;
+            color: var(--color-green) !important;
+            font-weight: 600;
+            display: block;
         }
 
         .auth-modal .modal-content {
@@ -1043,13 +1049,13 @@
 
         .word-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
 
         .word-card {
             background: var(--color-white);
-            padding: 40px;
+            padding: 24px;
             border: 1px solid rgba(0, 0, 0, 0.05);
             transition: var(--transition-slow);
             overflow: hidden;
@@ -1104,7 +1110,7 @@
         }
 
         .word-card:hover {
-            transform: translateY(-10px);
+            transform: translateY(-5px);
             border-color: var(--color-green);
         }
 
@@ -1112,41 +1118,45 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
 
         .word-main {
-            font-size: 2rem;
+            font-size: 1.4rem;
             color: var(--color-green);
-            margin-bottom: 5px;
+            margin-bottom: 2px;
+            font-weight: 700;
         }
 
         .word-phonetic {
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             font-family: monospace;
             opacity: 0.4;
         }
 
         .variant-badge {
-            font-size: 0.6rem;
+            font-size: 0.55rem;
             text-transform: uppercase;
-            padding: 4px 8px;
+            padding: 3px 6px;
             border: 1px solid;
+            font-weight: 700;
         }
 
         .translation {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
+            font-size: 0.95rem;
+            margin-bottom: 12px;
             font-weight: 500;
+            line-height: 1.4;
         }
 
         .example {
-            padding-left: 15px;
+            padding-left: 12px;
             border-left: 2px solid var(--color-yellow);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             font-style: italic;
             opacity: 0.7;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
         }
 
         .btn-play {
@@ -2796,93 +2806,120 @@
                 return;
             }
 
-            // 1. Verificar Mapa Estático Primeiro
-            let staticMatch = translatorMap[cleanText];
             let variants = [];
+            const wordsMatch = [];
 
+            // 1. Procurar Frase Completa (Mapa Estático)
+            let staticMatch = translatorMap[cleanText];
             if (staticMatch) {
+                variants.push(
+                    { id: 'forro', name: 'Forro', word: staticMatch.forro, pronunciation: '/bo dji bo/', audio: null, exact: true },
+                    { id: 'angolar', name: 'Angolar', word: staticMatch.angolar, pronunciation: '/m.fa.la bo/', audio: null, exact: true },
+                    { id: 'lungie', name: 'Lung\'ie', word: staticMatch.lungie, pronunciation: '/bo dji bo/', audio: null, exact: true }
+                );
+            }
+
+            // 2. Procurar na Base de Dados (Frase ou Palavras)
+            try {
+                // Tenta frase completa primeiro
+                const fullRes = await fetch(`/api/dicionario?q=${encodeURIComponent(cleanText)}`);
+                const fullData = await fullRes.json();
+                
+                if (fullData.words && fullData.words.length > 0) {
+                    fullData.words.forEach(w => {
+                        const vId = w.variant.toLowerCase().replace("'", "").replace(" ", "");
+                        const existing = variants.find(v => v.id === vId && v.exact);
+                        if (!existing) {
+                            variants.push({
+                                id: vId,
+                                name: w.variant,
+                                word: w.word,
+                                pronunciation: w.phonetic || 'Pronúncia disponível',
+                                audio: w.audioUrl,
+                                exact: true
+                            });
+                        }
+                    });
+                }
+
+                // Se for uma frase e não tivermos muitos resultados exatos, procurar por palavras individuais
+                if (cleanText.includes(' ') && variants.length < 3) {
+                    const parts = cleanText.split(/\s+/).filter(p => p.length > 2);
+                    for (const part of parts) {
+                        const pRes = await fetch(`/api/dicionario?q=${encodeURIComponent(part)}`);
+                        const pData = await pRes.json();
+                        if (pData.words) {
+                            pData.words.forEach(w => {
+                                const vId = w.variant.toLowerCase().replace("'", "").replace(" ", "");
+                                wordsMatch.push({
+                                    id: vId,
+                                    name: w.variant,
+                                    word: w.word,
+                                    original: part,
+                                    pronunciation: w.phonetic || '-',
+                                    audio: w.audioUrl
+                                });
+                            });
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Erro no tradutor:", err);
+            }
+
+            // Fallback se nada foi encontrado
+            if (variants.length === 0 && wordsMatch.length === 0) {
+                const fb = translatorMap["padrão"];
                 variants = [
-                    { id: 'forro', name: 'Forro', word: staticMatch.forro, pronunciation: '/bo dji bo/', audio: null },
-                    { id: 'angolar', name: 'Angolar', word: staticMatch.angolar, pronunciation: '/m.fa.la bo/', audio: null },
-                    { id: 'lungie', name: 'Lung\'ie', word: staticMatch.lungie, pronunciation: '/bo dji bo/', audio: null }
+                    { id: 'forro', name: 'Forro', word: fb.forro, pronunciation: '-', audio: null },
+                    { id: 'angolar', name: 'Angolar', word: fb.angolar, pronunciation: '-', audio: null },
+                    { id: 'lungie', name: 'Lung\'ie', word: fb.lungie, pronunciation: '-', audio: null }
                 ];
             }
 
-            // 2. Procurar SEMPRE na Base de Dados para complementar/atualizar
-            try {
-                const response = await fetch(`/api/dicionario?q=${encodeURIComponent(cleanText)}`);
-                const data = await response.json();
-                const dbWords = data.words || [];
+            const filteredVariants = variants.filter(v => filterLang === 'all' || v.id === filterLang.toLowerCase().replace("'", "").replace(" ", ""));
+            const filteredWords = wordsMatch.filter(v => filterLang === 'all' || v.id === filterLang.toLowerCase().replace("'", "").replace(" ", ""));
 
-                if (dbWords.length > 0) {
-                    // Se encontrarmos na DB, adicionamos ou substituímos os resultados
-                    dbWords.forEach(w => {
-                        const variantId = w.variant.toLowerCase().replace("'", "").replace(" ", "");
-                        
-                        // Procurar se já existe esta variante (do mapa estático)
-                        const existingIdx = variants.findIndex(v => v.id === variantId);
-                        
-                        const newEntry = {
-                            id: variantId,
-                            name: w.variant,
-                            word: w.word,
-                            pronunciation: w.phonetic || 'Pronúncia disponível',
-                            audio: w.audioUrl ? w.audioUrl : null
-                        };
-
-                        if (existingIdx !== -1) {
-                            variants[existingIdx] = newEntry; // Prioridade para a DB
-                        } else {
-                            variants.push(newEntry);
-                        }
-                    });
-                } else if (!staticMatch) {
-                    // Se não houver nada, usar fallback padrão
-                    const fallback = translatorMap["padrão"];
-                    variants = [
-                        { id: 'forro', name: 'Forro', word: fallback.forro, pronunciation: '-', audio: null },
-                        { id: 'angolar', name: 'Angolar', word: fallback.angolar, pronunciation: '-', audio: null },
-                        { id: 'lungie', name: 'Lung\'ie', word: fallback.lungie, pronunciation: '-', audio: null }
-                    ];
-                }
-            } catch (err) {
-                console.error("Erro no tradutor dinâmico:", err);
-            }
-
-            const filtered = variants.filter(v => {
-                if (filterLang === 'all') return true;
-                const normalizedFilter = filterLang.toLowerCase().replace("'", "").replace(" ", "");
-                return v.id === normalizedFilter;
-            });
-
-            container.innerHTML = filtered.map(v => `
-                <div class="result-card-refined">
+            let html = filteredVariants.map(v => `
+                <div class="result-card-refined ${v.exact ? 'exact-match' : ''}">
                     <div class="result-header">
                         <span class="variant-tag">${v.name}</span>
                         <div style="display: flex; gap: 12px;">
-                            <button class="bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors" onclick="navigator.clipboard.writeText('${v.word}')">
-                                <i data-lucide="copy" style="width: 16px; color: #64748b;"></i>
+                            <button class="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors" onclick="navigator.clipboard.writeText('${v.word}')">
+                                <i data-lucide="copy" style="width: 14px; color: white;"></i>
                             </button>
-                            <button class="bg-white/5 hover:bg-white/10 p-2 rounded-full transition-colors" onclick="playAudio('${v.audio}')">
-                                <i data-lucide="volume-2" style="width: 16px; color: ${v.audio ? '#4ade80' : '#64748b'};"></i>
-                            </button>
+                            ${v.audio ? `
+                            <button class="bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors" onclick="playAudio('${v.audio}')">
+                                <i data-lucide="volume-2" style="width: 14px; color: #4ade80;"></i>
+                            </button>` : ''}
                         </div>
                     </div>
                     <div class="result-word">${v.word}</div>
                     <div class="result-meta">
-                        <span style="font-family: monospace; color: #64748b;">${v.pronunciation}</span>
-                        <span style="opacity: 0.6;">Tradução aproximada para "${cleanText}"</span>
+                        <span style="font-family: monospace; opacity: 0.8;">${v.pronunciation}</span>
+                        <span style="opacity: 0.6;">${v.exact ? `Tradução exata` : `Tradução sugerida`}</span>
                     </div>
                 </div>
             `).join('');
-            
+
+            if (filteredWords.length > 0) {
+                html += `<div style="grid-column: 1/-1; margin: 20px 0 10px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.2em; opacity: 0.5; color: white;">Palavras encontradas na frase:</div>`;
+                html += filteredWords.slice(0, 6).map(v => `
+                    <div class="result-card-refined small" style="padding: 15px;">
+                        <div class="result-header" style="margin-bottom: 8px;">
+                            <span class="variant-tag" style="font-size: 0.5rem; padding: 2px 6px;">${v.name}</span>
+                            <span style="font-size: 0.6rem; opacity: 0.5;">"${v.original}"</span>
+                        </div>
+                        <div class="result-word" style="font-size: 1.1rem; margin-bottom: 4px;">${v.word}</div>
+                    </div>
+                `).join('');
+            }
+
+            container.innerHTML = html;
             lucide.createIcons();
+            
             gsap.from(container.querySelectorAll('.result-card-refined'), { 
-                opacity: 0, 
-                y: 20, 
-                stagger: 0.1, 
-                duration: 0.6, 
-                ease: "power4.out" 
+                opacity: 0, y: 10, stagger: 0.05, duration: 0.4, ease: "power2.out" 
             });
         }
 
